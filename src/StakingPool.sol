@@ -51,12 +51,15 @@ contract StakingPool is ReentrancyGuard, Ownable {
     }
     
     function unstake(uint256 _amount) external nonReentrant {
+        require(_amount > 0, "Amount must be greater than 0");
+        
         StakeInfo storage stakeInfo = stakes[msg.sender];
         require(stakeInfo.amount >= _amount, "Insufficient stake");
         
         // Claim rewards before unstaking
         _claimRewards();
         
+        // Update state before transfer
         stakeInfo.amount -= _amount;
         totalStaked -= _amount;
         

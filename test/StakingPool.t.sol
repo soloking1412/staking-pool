@@ -96,13 +96,30 @@ contract StakingPoolTest is Test {
         vm.stopPrank();
     }
     
-    function testFailInsufficientStake() public {
+    function test_RevertWhen_InsufficientStake() public {
         vm.startPrank(alice);
         token.approve(address(stakingPool), 100 * 10**token.decimals());
         stakingPool.stake(100 * 10**token.decimals());
+
+        // Verify staked amount
+        (uint256 amount, , ) = stakingPool.stakes(alice);
+        assertEq(amount, 100 * 10**token.decimals(), "Staked amount should be 100 tokens");
+        assertEq(stakingPool.totalStaked(), 100 * 10**token.decimals(), "Total staked should be 100 tokens");
+
+        // Try to unstake more than staked - should fail
+        bool success = true;
+        try stakingPool.unstake(200 * 10**token.decimals()) {
+            success = false;
+        } catch {
+            // Expected to fail
+        }
+        assertTrue(success, "Unstaking more than staked amount should fail");
+
+        // Verify staked amount hasn't changed
+        (amount, , ) = stakingPool.stakes(alice);
+        assertEq(amount, 100 * 10**token.decimals(), "Staked amount should still be 100 tokens");
+        assertEq(stakingPool.totalStaked(), 100 * 10**token.decimals(), "Total staked should still be 100 tokens");
         
-        // Try to unstake more than staked
-        stakingPool.unstake(200 * 10**token.decimals());
         vm.stopPrank();
     }
 } 
